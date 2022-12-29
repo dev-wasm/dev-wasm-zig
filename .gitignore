@@ -1,0 +1,9 @@
+*.wasm
+
+zig-cache/
+zig-out/
+/release/
+/debug/
+/build/
+/build-*/
+/docgen_tmp/
