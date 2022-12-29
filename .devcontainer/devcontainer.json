@@ -1,0 +1,10 @@
+{
+    "name": "Zig WASM",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+	"remoteEnv": {
+		"PATH": "${containerEnv:PATH}:/zig-linux-x86_64-0.10.0"
+	}
+}
