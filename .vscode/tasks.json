@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build WASM-Zig",
+            "type": "shell",
+            "command": "zig build-exe src/main.zig -target wasm32-wasi",
+            "group": "build",
+            "presentation": {
+                "reveal": "never",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Build WASM-Zig (WAGI)",
+            "type": "shell",
+            "command": "zig build-exe src/wagi.zig -target wasm32-wasi",
+            "group": "build",
+            "presentation": {
+                "reveal": "never",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Build WASM-Zig (HTTP Client)",
+            "type": "shell",
+            "command": "zig build-exe src/http.zig -target wasm32-wasi",
+            "group": "build",
+            "presentation": {
+                "reveal": "never",
+                "panel": "shared"
+            }
+        }
+    ]
+}

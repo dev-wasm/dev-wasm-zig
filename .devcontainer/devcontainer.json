@@ -6,5 +6,12 @@
     },
 	"remoteEnv": {
 		"PATH": "${containerEnv:PATH}:/zig-linux-x86_64-0.10.0"
+	},
+    "customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools"
+			]
+		}
 	}
 }

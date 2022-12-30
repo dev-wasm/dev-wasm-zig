@@ -32,8 +32,36 @@ wasmtime main.wasm --dir .
 Coming soon
 
 ## Http client example
-Coming soon
+*NB*: this example uses an experimental `wasmtime-http` that incorporates a highly
+experimental HTTP client library that is not yet part of the WASI specification.
+Use at your own risk, things are likely to change drastically in the future.
+
+```sh
+# Build it
+$ zig build-exe src/http.zig -target wasm32-wasi
+# Without any approved URLs it fails
+$ wasmtime-http --wasi-modules=experimental-wasi-http http.wasm
+Response Error: 7
+# With approved URLs it works
+$  WASI_HTTP_ALLOWED_HOSTS=https://postman-echo.com wasmtime-http --wasi-modules=experimental-wasi-http http.wasmRequest succeeded: 200
+Content length: 236
+{"args":{},"headers":{"x-forwarded-proto":"https","x-forwarded-port":"443","host":"postman-echo.com","x-amzn-trace-id":"Root=1-63af6c37-35d6bd1e4fe55f022cd62b81","content-length":"0","accept":"*/*"},"url":"https://postman-echo.com/get"}
+```
 
 # Debugging
-Coming later
+Both `lldb` and `gdb` work. There is vscode debugger integration in `.vscode/launch.json` so you should
+be able to use F5 to launch the debugger.
+
+If you want to debug from the command line:
+
+```sh
+$ lldb wasmtime
+# Disable dslr so debugging works in a container
+$ settings set target.disable-aslr false
+# Set a break point
+$ b src/main.zig:8
+# Start running
+$ run -g main.wasm
+...
+```
 

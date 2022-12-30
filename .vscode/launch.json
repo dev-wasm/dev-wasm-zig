@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "name": "WASM-Zig Launch (gdb)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/root/.wasmtime/bin/wasmtime",
+            "args": [
+                "-g",
+                "main.wasm",
+                "--dir",
+                "."
+            ],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build WASM-Zig"
+        },
+        {
+            "name": "WASM-Zig Launch (gdb)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/root/.wasmtime/bin/wasmtime",
+            "args": [
+                "-g",
+                "http.wasm",
+                "--dir",
+                "."
+            ],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build WASM-Zig (HTTP Client)"
+        }
+    ]
+}
