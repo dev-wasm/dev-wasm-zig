@@ -1,60 +1,37 @@
-pub extern "wasi_experimental_http" fn req(url: *allowzero const u8, url_len: i32, method: *allowzero const u8, method_len: i32, headers: *allowzero const u8, headers_len: i32, body: *allowzero const u8, body_len: i32, statusCode: *u16, handle: *u32) i32;
-pub extern "wasi_experimental_http" fn close(handle: i32) i32;
-pub extern "wasi_experimental_http" fn body_read(handle: u32, body_buffer: *u8, body_buffer_len: i32, written_bytes: *u32) i32;
-pub extern "wasi_experimental_http" fn header_get(handle: u32, name: *allowzero const u8, name_len: i32, body_buffer: *u8, body_buffer_len: i32, written_bytes: *u32) i32;
+const types = @cImport({
+    // See https://github.com/ziglang/zig/issues/515
+    @cDefine("_NO_CRT_STDIO_INLINE", "1");
+    @cInclude("./c/proxy.h");
+});
 
 const std = @import("std");
-
-fn cstring(str: []const u8) *allowzero const u8 {
-    if (str.len == 0) {
-        return @intToPtr(*allowzero const u8, 0);
-    }
-    var cstr: [*c]const u8 = &str[0];
-    return cstr;
-}
-
-fn request(url: []const u8, method: []const u8, headers: []const u8, body: []const u8, statusCode: *u16, handle: *u32) i32 {
-    return req(cstring(url), @bitCast(i32, url.len), cstring(method), @bitCast(i32, method.len), cstring(headers), @bitCast(i32, headers.len), cstring(body), @bitCast(i32, body.len), statusCode, handle);
-}
-
-fn header(handle: u32, name: []const u8, buffer: []u8, written: *u32) i32 {
-    return header_get(handle, cstring(name), @bitCast(i32, name.len), &buffer[0], @bitCast(i32, buffer.len), written);
-}
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() !void {
-    const allocator = gpa.allocator();
+    //const allocator = gpa.allocator();
     const stdout = std.io.getStdOut().writer();
-    var statusCode: u16 = 0;
-    var handle: u32 = 0;
+    //var statusCode: u16 = 0;
+    //var handle: u32 = 0;
 
-    var result = request("https://postman-echo.com/get", "GET", "", "", &statusCode, &handle);
-    defer _ = close(@bitCast(i32, handle));
-    if (result != 0) {
-        try stdout.print("Response Error: {any}\n", .{result});
-        return;
-    }
+    var content_type: []types.types_tuple2_string_string_t = 
+    []types.types_tuple2_string_string_t{
+        types.types_tuple2_string_string_t{
+            .f0 = types.types_string_t{ .ptr = "User-agent", .len = 10 },
+            .f1 = types.types_string_t{ .ptr = "WASI-HTTP/0.0.1", .len = 15},
+        },
+        types.types_tuple2_string_string_t{
+            .f0 = types.types_string_t{ .ptr = "Content-type", .len = 12 },
+            .f1 = types.types_string_t{ .ptr = "application/json", .len = 16},
+        }};
+    
+    var headers_list: types.types_list_tuple2_string_string_t =
+    types.types_list_tuple2_string_string_t{
+        .ptr = &content_type[0],
+        .len = 2,
+    };
+    var headers: types.wasi_http_types_fields_t = types.wasi_http_types_new_fields(&headers_list);
 
-    try stdout.print("Request succeeded: {d}\n", .{statusCode});
+    stdout.Printf("Headers: %d\n", headers);
 
-    var header_buffer = try allocator.alloc(u8, 1024);
-    var header_len: u32 = 0;
-    result = header(handle, "Content-length", header_buffer, &header_len);
-    if (result != 0) {
-        try stdout.print("Response Error: {any}\n", .{result});
-        return;
-    }
-    try stdout.print("Content length: {s}\n", .{header_buffer[0..header_len]});
-    const len = try std.fmt.parseInt(u32, header_buffer[0..header_len], 10);
-    var buffer = try allocator.alloc(u8, len + 1);
-    defer allocator.free(buffer);
-
-    var written: u32 = 0; 
-    result = body_read(handle, &buffer[0], @bitCast(i32, buffer.len), &written);
-    if (result != 0) {
-        try stdout.print("Response Error: {any}\n", .{result});
-        return;
-    }
-    try stdout.print("{s}\n", .{buffer[0..written]});
 }
