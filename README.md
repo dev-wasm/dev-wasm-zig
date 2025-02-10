@@ -6,7 +6,12 @@ Simple devcontainer for Zig development for WebAssembly and WASI
 ## Github Codespaces
 Just click the button:
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=583174212)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=583174212) 
+
+## Codeanywhere
+Launch your workspace by clicking the link below:
+
+[![Open in Codeanywhere](https://codeanywhere.com/img/open-in-codeanywhere-btn.svg)](https://app.codeanywhere.com/#https://github.com/dev-wasm/dev-wasm-zig)
 
 ## Visual Studio Code
 Note this assumes that you have the VS code support for remote containers and `docker` installed 
