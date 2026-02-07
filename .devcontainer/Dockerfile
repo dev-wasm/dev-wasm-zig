@@ -7,10 +7,9 @@ RUN curl -fsSL https://github.com/bytecodealliance/wasmtime/releases/download/v$
     cp wasmtime-v${WASMTIME_VER}-x86_64-linux/wasmtime /usr/local/bin/ && \
     rm -rf wasmtime-v${WASMTIME_VER}-x86_64-linux
 
-ENV WASI_SDK_VER=30
-ENV WASI_SDK_FULL=30.0
-RUN curl -fsSL https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_SDK_VER}/wasi-sdk-${WASI_SDK_FULL}-x86_64-linux.tar.gz | tar -xz && \
-    mv wasi-sdk-${WASI_SDK_FULL}-x86_64-linux /opt/wasi-sdk
+ENV WASI_SDK_VERSION=30.0
+RUN curl -fsSL https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-30/wasi-sdk-${WASI_SDK_VERSION}-x86_64-linux.tar.gz | tar -xz && \
+    mv wasi-sdk-${WASI_SDK_VERSION}-x86_64-linux /opt/wasi-sdk
 
 ENV VERSION=0.15.2
 ENV FILE=zig-linux-x86_64-${VERSION}.tar.xz
