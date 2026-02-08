@@ -71,5 +71,5 @@ test "cstring with non-empty string" {
 test "cstring with empty string returns null pointer" {
     const empty = "";
     const result = cstring(empty);
-    try testing.expectEqual(@intFromPtr(result), 0);
+    try testing.expectEqual(0, @intFromPtr(result));
 }
