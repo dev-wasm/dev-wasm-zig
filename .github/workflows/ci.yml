@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Zig
+      uses: goto-bus-stop/setup-zig@v2
+      with:
+        version: 0.15.2
+    
+    - name: Verify Zig installation
+      run: zig version
+    
+    - name: Run unit tests
+      run: |
+        zig test src/test_main.zig
+        zig test src/http.zig
+    
+    - name: Build main.zig for WASM
+      run: zig build-exe src/main.zig -target wasm32-wasi -femit-bin=main.wasm
+    
+    - name: Build wagi.zig for WASM
+      run: zig build-exe src/wagi.zig -target wasm32-wasi -femit-bin=wagi.wasm
+    
+    - name: Build http.zig for WASM
+      run: zig build-exe src/http.zig -target wasm32-wasi -femit-bin=http.wasm
+    
+    - name: Verify WASM files created
+      run: |
+        ls -lh *.wasm
+        file *.wasm

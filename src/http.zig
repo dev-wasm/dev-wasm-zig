@@ -58,3 +58,18 @@ pub fn main() !void {
     }
     try stdout.print("{s}\n", .{buffer[0..written]});
 }
+
+// Tests
+const testing = std.testing;
+
+test "cstring with non-empty string" {
+    const input = "hello";
+    const result = cstring(input);
+    try testing.expect(@intFromPtr(result) != 0);
+}
+
+test "cstring with empty string returns null pointer" {
+    const empty = "";
+    const result = cstring(empty);
+    try testing.expectEqual(@intFromPtr(result), 0);
+}
