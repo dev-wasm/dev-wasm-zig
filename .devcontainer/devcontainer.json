@@ -5,7 +5,7 @@
         "context": ".."
     },
 	"remoteEnv": {
-		"PATH": "${containerEnv:PATH}:/zig-linux-x86_64-0.10.0"
+		"PATH": "${containerEnv:PATH}:/zig-linux-x86_64-0.15.2"
 	},
     "customizations": {
 		"vscode": {
