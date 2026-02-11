@@ -9,7 +9,7 @@ fn cstring(str: []const u8) *allowzero const u8 {
     if (str.len == 0) {
         return @ptrFromInt(0);
     }
-    var cstr: [*c]const u8 = &str[0];
+    const cstr: [*c]const u8 = &str[0];
     return cstr;
 }
 
@@ -25,7 +25,9 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() !void {
     const allocator = gpa.allocator();
-    const stdout = std.io.getStdOut().writer();
+    var buf: [8192]u8 = undefined;
+    var writer = std.fs.File.stdout().writer(&buf);
+    const stdout = &writer.interface;
     var statusCode: u16 = 0;
     var handle: u32 = 0;
 
@@ -33,6 +35,7 @@ pub fn main() !void {
     defer _ = close(@intCast(handle));
     if (result != 0) {
         try stdout.print("Response Error: {any}\n", .{result});
+        try stdout.flush();
         return;
     }
 
@@ -43,6 +46,7 @@ pub fn main() !void {
     result = header(handle, "Content-length", header_buffer, &header_len);
     if (result != 0) {
         try stdout.print("Response Error: {any}\n", .{result});
+        try stdout.flush();
         return;
     }
     try stdout.print("Content length: {s}\n", .{header_buffer[0..header_len]});
@@ -54,9 +58,11 @@ pub fn main() !void {
     result = body_read(handle, &buffer[0], @intCast(buffer.len), &written);
     if (result != 0) {
         try stdout.print("Response Error: {any}\n", .{result});
+        try stdout.flush();
         return;
     }
     try stdout.print("{s}\n", .{buffer[0..written]});
+    try stdout.flush();
 }
 
 // Tests
