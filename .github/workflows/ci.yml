@@ -24,6 +24,13 @@ jobs:
     - name: Verify Zig installation
       run: zig version
     
+    - name: Setup Wasmtime
+      run: |
+        curl -L https://github.com/bytecodealliance/wasmtime/releases/download/v27.0.0/wasmtime-v27.0.0-x86_64-linux.tar.xz -o wasmtime.tar.xz
+        tar -xf wasmtime.tar.xz
+        sudo cp wasmtime-v27.0.0-x86_64-linux/wasmtime /usr/local/bin/
+        wasmtime --version
+    
     - name: Run unit tests
       run: |
         zig test src/test_main.zig
@@ -42,3 +49,67 @@ jobs:
       run: |
         ls -lh *.wasm
         file *.wasm
+    
+    - name: Execute and validate WASM binaries
+      run: |
+        echo "Testing main.wasm execution..."
+        TEMP_DIR=$(mktemp -d)
+        OUTPUT=$(wasmtime main.wasm --dir $TEMP_DIR 2>&1)
+        echo "$OUTPUT"
+        
+        # Validate main.wasm output
+        if echo "$OUTPUT" | grep -q "Hello, Zig!"; then
+          echo "✓ main.wasm: Output contains expected greeting"
+        else
+          echo "✗ main.wasm: Expected greeting not found"
+          exit 1
+        fi
+        
+        # Validate files were created
+        if [ -f "$TEMP_DIR/test.txt" ] && [ "$(cat $TEMP_DIR/test.txt)" = "This is a test" ]; then
+          echo "✓ main.wasm: test.txt created with correct content"
+        else
+          echo "✗ main.wasm: test.txt validation failed"
+          exit 1
+        fi
+        
+        if [ -f "$TEMP_DIR/test2.txt" ] && [ "$(cat $TEMP_DIR/test2.txt)" = "This is a test" ]; then
+          echo "✓ main.wasm: test2.txt created with correct content"
+        else
+          echo "✗ main.wasm: test2.txt validation failed"
+          exit 1
+        fi
+        
+        rm -rf "$TEMP_DIR"
+        
+        echo ""
+        echo "Testing wagi.wasm execution..."
+        OUTPUT=$(wasmtime wagi.wasm 2>&1)
+        echo "$OUTPUT"
+        
+        # Validate wagi.wasm output
+        if echo "$OUTPUT" | grep -q "Content-type: text/html"; then
+          echo "✓ wagi.wasm: Output contains correct Content-type header"
+        else
+          echo "✗ wagi.wasm: Content-type header not found"
+          exit 1
+        fi
+        
+        if echo "$OUTPUT" | grep -q "Hello world!"; then
+          echo "✓ wagi.wasm: Output contains expected HTML content"
+        else
+          echo "✗ wagi.wasm: Expected HTML content not found"
+          exit 1
+        fi
+        
+        # Test with QUERY_STRING
+        OUTPUT_WITH_QS=$(QUERY_STRING="test=123" wasmtime wagi.wasm 2>&1)
+        if echo "$OUTPUT_WITH_QS" | grep -q "test=123"; then
+          echo "✓ wagi.wasm: QUERY_STRING processed correctly"
+        else
+          echo "✗ wagi.wasm: QUERY_STRING not found in output"
+          exit 1
+        fi
+        
+        echo ""
+        echo "Skipping http.wasm execution (requires wasmtime-http with network access)"
