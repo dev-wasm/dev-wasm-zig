@@ -47,7 +47,7 @@ echo ""
 echo "  - Testing main.wasm execution..."
 # Create a temp directory for main.wasm to write files
 TEMP_DIR=$(mktemp -d)
-OUTPUT=$(wasmtime main.wasm --dir $TEMP_DIR 2>&1)
+OUTPUT=$(wasmtime main.wasm --dir "$TEMP_DIR" 2>&1)
 echo "$OUTPUT"
 
 # Validate main.wasm output
