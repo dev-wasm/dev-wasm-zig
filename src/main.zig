@@ -5,17 +5,23 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() !void {
     const allocator = gpa.allocator();
-    const stdout = std.io.getStdOut().writer();
+    var bw = std.io.bufferedWriter(std.fs.File.stdout().writer());
+    const stdout = bw.writer();
     try stdout.print("Hello, Zig!\n", .{});
+    try bw.flush();
 
     // Setup the pre-opened file descriptors
-    var preopens = std.fs.wasi.PreopenList.init(allocator);
-    defer preopens.deinit();
-    try preopens.populate(null);
+    const preopens = try std.fs.wasi.preopensAlloc(allocator);
+    defer {
+        for (preopens.names) |name| {
+            allocator.free(name);
+        }
+        allocator.free(preopens.names);
+    }
 
     // Look for the '.' directory
-    if (preopens.find(std.fs.wasi.PreopenType{ .Dir = "." })) |pr| {
-        const dir = std.fs.Dir{ .fd = pr.fd };
+    if (preopens.find(".")) |fd| {
+        const dir = std.fs.Dir{ .fd = fd };
         var file = try dir.createFile(
             "test.txt",
             .{ .read = true },
@@ -25,6 +31,7 @@ pub fn main() !void {
         try file.seekTo(0);
         
         const read_buf = try file.readToEndAlloc(allocator, 1024);
+        defer allocator.free(read_buf);
 
         var file2 = try dir.createFile(
             "test2.txt",

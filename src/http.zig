@@ -7,32 +7,34 @@ const std = @import("std");
 
 fn cstring(str: []const u8) *allowzero const u8 {
     if (str.len == 0) {
-        return @intToPtr(*allowzero const u8, 0);
+        return @ptrFromInt(0);
     }
-    var cstr: [*c]const u8 = &str[0];
+    const cstr: [*c]const u8 = &str[0];
     return cstr;
 }
 
 fn request(url: []const u8, method: []const u8, headers: []const u8, body: []const u8, statusCode: *u16, handle: *u32) i32 {
-    return req(cstring(url), @bitCast(i32, url.len), cstring(method), @bitCast(i32, method.len), cstring(headers), @bitCast(i32, headers.len), cstring(body), @bitCast(i32, body.len), statusCode, handle);
+    return req(cstring(url), @intCast(url.len), cstring(method), @intCast(method.len), cstring(headers), @intCast(headers.len), cstring(body), @intCast(body.len), statusCode, handle);
 }
 
 fn header(handle: u32, name: []const u8, buffer: []u8, written: *u32) i32 {
-    return header_get(handle, cstring(name), @bitCast(i32, name.len), &buffer[0], @bitCast(i32, buffer.len), written);
+    return header_get(handle, cstring(name), @intCast(name.len), &buffer[0], @intCast(buffer.len), written);
 }
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() !void {
     const allocator = gpa.allocator();
-    const stdout = std.io.getStdOut().writer();
+    var bw = std.io.bufferedWriter(std.fs.File.stdout().writer());
+    const stdout = bw.writer();
     var statusCode: u16 = 0;
     var handle: u32 = 0;
 
     var result = request("https://postman-echo.com/get", "GET", "", "", &statusCode, &handle);
-    defer _ = close(@bitCast(i32, handle));
+    defer _ = close(@intCast(handle));
     if (result != 0) {
         try stdout.print("Response Error: {any}\n", .{result});
+        try bw.flush();
         return;
     }
 
@@ -43,6 +45,7 @@ pub fn main() !void {
     result = header(handle, "Content-length", header_buffer, &header_len);
     if (result != 0) {
         try stdout.print("Response Error: {any}\n", .{result});
+        try bw.flush();
         return;
     }
     try stdout.print("Content length: {s}\n", .{header_buffer[0..header_len]});
@@ -51,10 +54,27 @@ pub fn main() !void {
     defer allocator.free(buffer);
 
     var written: u32 = 0; 
-    result = body_read(handle, &buffer[0], @bitCast(i32, buffer.len), &written);
+    result = body_read(handle, &buffer[0], @intCast(buffer.len), &written);
     if (result != 0) {
         try stdout.print("Response Error: {any}\n", .{result});
+        try bw.flush();
         return;
     }
     try stdout.print("{s}\n", .{buffer[0..written]});
+    try bw.flush();
+}
+
+// Tests
+const testing = std.testing;
+
+test "cstring with non-empty string" {
+    const input = "hello";
+    const result = cstring(input);
+    try testing.expect(@intFromPtr(result) != 0);
+}
+
+test "cstring with empty string returns null pointer" {
+    const empty = "";
+    const result = cstring(empty);
+    try testing.expectEqual(0, @intFromPtr(result));
 }
