@@ -4,9 +4,8 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() !void {
     const allocator = gpa.allocator();
-    var buf: [4096]u8 = undefined;
-    var writer = std.fs.File.stdout().writer(&buf);
-    const stdout = &writer.interface;
+    var bw = std.io.bufferedWriter(std.fs.File.stdout().writer());
+    const stdout = bw.writer();
     try stdout.print("Content-type: text/html\n", .{});
     try stdout.print("\n", .{});
 
@@ -18,5 +17,5 @@ pub fn main() !void {
     } else {
         try stdout.print("<html><body><h3>Hello world!</h3></body></html>", .{});
     }
-    try stdout.flush();
+    try bw.flush();
 }

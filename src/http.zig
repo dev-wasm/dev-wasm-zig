@@ -25,9 +25,8 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() !void {
     const allocator = gpa.allocator();
-    var buf: [8192]u8 = undefined;
-    var writer = std.fs.File.stdout().writer(&buf);
-    const stdout = &writer.interface;
+    var bw = std.io.bufferedWriter(std.fs.File.stdout().writer());
+    const stdout = bw.writer();
     var statusCode: u16 = 0;
     var handle: u32 = 0;
 
@@ -35,7 +34,7 @@ pub fn main() !void {
     defer _ = close(@intCast(handle));
     if (result != 0) {
         try stdout.print("Response Error: {any}\n", .{result});
-        try stdout.flush();
+        try bw.flush();
         return;
     }
 
@@ -46,7 +45,7 @@ pub fn main() !void {
     result = header(handle, "Content-length", header_buffer, &header_len);
     if (result != 0) {
         try stdout.print("Response Error: {any}\n", .{result});
-        try stdout.flush();
+        try bw.flush();
         return;
     }
     try stdout.print("Content length: {s}\n", .{header_buffer[0..header_len]});
@@ -58,11 +57,11 @@ pub fn main() !void {
     result = body_read(handle, &buffer[0], @intCast(buffer.len), &written);
     if (result != 0) {
         try stdout.print("Response Error: {any}\n", .{result});
-        try stdout.flush();
+        try bw.flush();
         return;
     }
     try stdout.print("{s}\n", .{buffer[0..written]});
-    try stdout.flush();
+    try bw.flush();
 }
 
 // Tests
