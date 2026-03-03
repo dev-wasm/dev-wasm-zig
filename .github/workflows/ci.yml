@@ -26,9 +26,9 @@ jobs:
     
     - name: Setup Wasmtime
       run: |
-        curl -L https://github.com/bytecodealliance/wasmtime/releases/download/v27.0.0/wasmtime-v27.0.0-x86_64-linux.tar.xz -o wasmtime.tar.xz
+        curl -L https://github.com/bytecodealliance/wasmtime/releases/download/v41.0.3/wasmtime-v41.0.3-x86_64-linux.tar.xz -o wasmtime.tar.xz
         tar -xf wasmtime.tar.xz
-        sudo cp wasmtime-v27.0.0-x86_64-linux/wasmtime /usr/local/bin/
+        sudo cp wasmtime-v41.0.3-x86_64-linux/wasmtime /usr/local/bin/
         wasmtime --version
     
     - name: Run unit tests
@@ -55,7 +55,7 @@ jobs:
         echo "Testing main.wasm execution..."
         TEMP_DIR=$(mktemp -d)
         set +e  # Temporarily disable exit on error to capture output
-        OUTPUT=$(wasmtime main.wasm --dir "$TEMP_DIR::." 2>&1)
+        OUTPUT=$(wasmtime run --dir "$TEMP_DIR::." main.wasm 2>&1)
         EXIT_CODE=$?
         set -e  # Re-enable exit on error
         echo "$OUTPUT"
@@ -95,7 +95,7 @@ jobs:
         
         echo ""
         echo "Testing wagi.wasm execution..."
-        OUTPUT=$(wasmtime wagi.wasm 2>&1)
+        OUTPUT=$(wasmtime run wagi.wasm 2>&1)
         echo "$OUTPUT"
         
         # Validate wagi.wasm output
@@ -114,7 +114,7 @@ jobs:
         fi
         
         # Test with QUERY_STRING
-        OUTPUT_WITH_QS=$(QUERY_STRING="test=123" wasmtime wagi.wasm 2>&1)
+        OUTPUT_WITH_QS=$(QUERY_STRING="test=123" wasmtime run --env QUERY_STRING wagi.wasm 2>&1)
         if echo "$OUTPUT_WITH_QS" | grep -q "test=123"; then
           echo "✓ wagi.wasm: QUERY_STRING processed correctly"
         else

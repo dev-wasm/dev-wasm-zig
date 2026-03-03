@@ -48,7 +48,7 @@ echo "  - Testing main.wasm execution..."
 # Create a temp directory for main.wasm to write files
 TEMP_DIR=$(mktemp -d)
 set +e  # Temporarily disable exit on error to capture output
-OUTPUT=$(wasmtime main.wasm --dir "$TEMP_DIR::." 2>&1)
+OUTPUT=$(wasmtime run --dir "$TEMP_DIR::." main.wasm 2>&1)
 EXIT_CODE=$?
 set -e  # Re-enable exit on error
 echo "$OUTPUT"
@@ -105,7 +105,7 @@ echo ""
 
 # Test wagi.wasm
 echo "  - Testing wagi.wasm execution..."
-OUTPUT=$(wasmtime wagi.wasm 2>&1)
+OUTPUT=$(wasmtime run wagi.wasm 2>&1)
 echo "$OUTPUT"
 
 # Validate wagi.wasm output
@@ -124,7 +124,7 @@ else
 fi
 
 # Test with QUERY_STRING environment variable
-OUTPUT_WITH_QS=$(QUERY_STRING="test=123" wasmtime wagi.wasm 2>&1)
+OUTPUT_WITH_QS=$(QUERY_STRING="test=123" wasmtime run --env QUERY_STRING wagi.wasm 2>&1)
 if echo "$OUTPUT_WITH_QS" | grep -q "test=123"; then
     echo "    ✓ wagi.wasm: QUERY_STRING environment variable is processed correctly"
 else

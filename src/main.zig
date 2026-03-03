@@ -6,17 +6,17 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     
-    // Get stdout writer for output (requires buffer for Zig 0.15.2)
+    // Get stdout writer for output
     var output_buffer: [4096]u8 = undefined;
     var stdout_file_writer = std.fs.File.stdout().writer(&output_buffer);
-    const out = &stdout_file_writer.interface;
-    try out.print("Hello, Zig!\n", .{});
-    try out.flush();
+    try stdout_file_writer.interface.print("Hello, Zig!\n", .{});
+    try stdout_file_writer.interface.flush();
 
     // Setup the pre-opened file descriptors
     const preopens = try std.fs.wasi.preopensAlloc(allocator);
     defer {
-        for (preopens.names) |name| {
+        // Only free names starting from index 3 (skip stdin, stdout, stderr which are string literals)
+        for (preopens.names[3..]) |name| {
             allocator.free(name);
         }
         allocator.free(preopens.names);

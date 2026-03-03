@@ -12,7 +12,8 @@ pub fn main() !void {
     try out.print("Content-type: text/html\n", .{});
     try out.print("\n", .{});
 
-    const envMap = try std.process.getEnvMap(allocator);
+    var envMap = try std.process.getEnvMap(allocator);
+    defer envMap.deinit();
     const queryString = envMap.getPtr("QUERY_STRING");
     
     if (queryString) |qs| {
