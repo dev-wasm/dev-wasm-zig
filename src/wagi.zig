@@ -1,9 +1,10 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-
 pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
     const allocator = gpa.allocator();
+    
     // Get writer for stdout output (requires buffer in Zig 0.15.2)
     var output_buffer: [4096]u8 = undefined;
     var stdout_file_writer = std.fs.File.stdout().writer(&output_buffer);

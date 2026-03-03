@@ -21,10 +21,11 @@ fn header(handle: u32, name: []const u8, buffer: []u8, written: *u32) i32 {
     return header_get(handle, cstring(name), @intCast(name.len), &buffer[0], @intCast(buffer.len), written);
 }
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-
 pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
     const allocator = gpa.allocator();
+    
     // Get stdout writer for output (requires buffer in Zig 0.15.2)
     var output_buffer: [8192]u8 = undefined;
     var stdout_file_writer = std.fs.File.stdout().writer(&output_buffer);

@@ -1,10 +1,11 @@
 // inspired by https://github.com/kubkon/zig-wasi-tutorial/blob/main/src/main.zig (thanks!)
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-
 pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
     const allocator = gpa.allocator();
+    
     // Get stdout writer for output (requires buffer for Zig 0.15.2)
     var output_buffer: [4096]u8 = undefined;
     var stdout_file_writer = std.fs.File.stdout().writer(&output_buffer);
