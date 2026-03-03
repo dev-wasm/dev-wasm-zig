@@ -25,28 +25,32 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() !void {
     const allocator = gpa.allocator();
-    // Get stdout writer for output
-    const stdout_writer = std.fs.File.stdout().writer();
+    // Get stdout writer for output (requires buffer in Zig 0.15.2)
+    var output_buffer: [8192]u8 = undefined;
+    var stdout_file_writer = std.fs.File.stdout().writer(&output_buffer);
+    const out = &stdout_file_writer.interface;
     var statusCode: u16 = 0;
     var handle: u32 = 0;
 
     var result = request("https://postman-echo.com/get", "GET", "", "", &statusCode, &handle);
     defer _ = close(@intCast(handle));
     if (result != 0) {
-        try stdout_writer.print("Response Error: {any}\n", .{result});
+        try out.print("Response Error: {any}\n", .{result});
+        try out.flush();
         return;
     }
 
-    try stdout_writer.print("Request succeeded: {d}\n", .{statusCode});
+    try out.print("Request succeeded: {d}\n", .{statusCode});
 
     var header_buffer = try allocator.alloc(u8, 1024);
     var header_len: u32 = 0;
     result = header(handle, "Content-length", header_buffer, &header_len);
     if (result != 0) {
-        try stdout_writer.print("Response Error: {any}\n", .{result});
+        try out.print("Response Error: {any}\n", .{result});
+        try out.flush();
         return;
     }
-    try stdout_writer.print("Content length: {s}\n", .{header_buffer[0..header_len]});
+    try out.print("Content length: {s}\n", .{header_buffer[0..header_len]});
     const len = try std.fmt.parseInt(u32, header_buffer[0..header_len], 10);
     var buffer = try allocator.alloc(u8, len + 1);
     defer allocator.free(buffer);
@@ -54,10 +58,12 @@ pub fn main() !void {
     var written: u32 = 0; 
     result = body_read(handle, &buffer[0], @intCast(buffer.len), &written);
     if (result != 0) {
-        try stdout_writer.print("Response Error: {any}\n", .{result});
+        try out.print("Response Error: {any}\n", .{result});
+        try out.flush();
         return;
     }
-    try stdout_writer.print("{s}\n", .{buffer[0..written]});
+    try out.print("{s}\n", .{buffer[0..written]});
+    try out.flush();
 }
 
 // Tests

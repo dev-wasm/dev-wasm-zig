@@ -5,9 +5,12 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() !void {
     const allocator = gpa.allocator();
-    // Get stdout writer for output
-    const stdout_writer = std.fs.File.stdout().writer();
-    try stdout_writer.print("Hello, Zig!\n", .{});
+    // Get stdout writer for output (requires buffer for Zig 0.15.2)
+    var output_buffer: [4096]u8 = undefined;
+    var stdout_file_writer = std.fs.File.stdout().writer(&output_buffer);
+    const out = &stdout_file_writer.interface;
+    try out.print("Hello, Zig!\n", .{});
+    try out.flush();
 
     // Setup the pre-opened file descriptors
     const preopens = try std.fs.wasi.preopensAlloc(allocator);
