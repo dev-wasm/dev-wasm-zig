@@ -47,14 +47,27 @@ echo ""
 echo "  - Testing main.wasm execution..."
 # Create a temp directory for main.wasm to write files
 TEMP_DIR=$(mktemp -d)
+set +e  # Temporarily disable exit on error to capture output
 OUTPUT=$(wasmtime main.wasm --dir "$TEMP_DIR::." 2>&1)
+EXIT_CODE=$?
+set -e  # Re-enable exit on error
 echo "$OUTPUT"
+echo "    Exit code: $EXIT_CODE"
+
+# Check if execution failed
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "    ✗ main.wasm: Execution failed with exit code $EXIT_CODE"
+    echo "    Output was: $OUTPUT"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
 
 # Validate main.wasm output
 if echo "$OUTPUT" | grep -q "Hello, Zig!"; then
     echo "    ✓ main.wasm: Output contains expected greeting"
 else
     echo "    ✗ main.wasm: Expected greeting not found"
+    rm -rf "$TEMP_DIR"
     exit 1
 fi
 
