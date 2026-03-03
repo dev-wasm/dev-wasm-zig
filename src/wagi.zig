@@ -4,18 +4,17 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn main() !void {
     const allocator = gpa.allocator();
-    var bw = std.io.bufferedWriter(std.fs.File.stdout().writer());
-    const stdout = bw.writer();
-    try stdout.print("Content-type: text/html\n", .{});
-    try stdout.print("\n", .{});
+    // Get writer for stdout output
+    const stdout_writer = std.fs.File.stdout().writer();
+    try stdout_writer.print("Content-type: text/html\n", .{});
+    try stdout_writer.print("\n", .{});
 
     const envMap = try std.process.getEnvMap(allocator);
     const queryString = envMap.getPtr("QUERY_STRING");
     
     if (queryString) |qs| {
-        try stdout.print("<html><body><h3>Hello world!</h3>{s}</body></html>", .{qs.*});
+        try stdout_writer.print("<html><body><h3>Hello world!</h3>{s}</body></html>", .{qs.*});
     } else {
-        try stdout.print("<html><body><h3>Hello world!</h3></body></html>", .{});
+        try stdout_writer.print("<html><body><h3>Hello world!</h3></body></html>", .{});
     }
-    try bw.flush();
 }
